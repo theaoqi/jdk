@@ -27,7 +27,6 @@
 
 #include "asm/assembler.hpp"
 #include "asm/register.hpp"
-#include "code/vmreg.inline.hpp"
 #include "compiler/oopMap.hpp"
 #include "utilities/macros.hpp"
 #include "runtime/rtmLocking.hpp"
