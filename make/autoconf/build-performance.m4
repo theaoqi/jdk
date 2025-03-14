@@ -367,11 +367,11 @@ AC_DEFUN_ONCE([BPERF_SETUP_PRECOMPILED_HEADERS],
     PRECOMPILED_HEADERS_AVAILABLE=false
   elif test "x$TOOLCHAIN_TYPE" = xgcc; then
     # Check whether the gcc is PIE enabled.
-    if [ "$OPENJDK_TARGET_OS" = "macosx" ]; then
+    if test "x$OPENJDK_TARGET_OS" = "xmacosx"; then
       PIE_STATUS=`$OTOOL -a -C -d -f -G -h -H -I -j -l -L -m -M -o -P -r -R -S -t -T -v -V -X -dyld_info -dyld_opcodes $CXX | $GREP FLAGS | $GREP PIE`
-    elif [ "$OPENJDK_TARGET_OS" = "windows" ]; then
+    elif test "x$OPENJDK_TARGET_OS" = "xwindows"; then
       PIE_STATUS=`$DUMPBIN -all $CXX | $GREP FLAGS | $GREP PIE`
-    elif [ "$OPENJDK_TARGET_OS" = "aix" ]; then
+    elif test "x$OPENJDK_TARGET_OS" = "xaix"; then
       PIE_STATUS=`dump -h -r -t -n -X64 $CXX | $GREP FLAGS | $GREP PIE`
     else
       PIE_STATUS=`$READELF -a $CXX | $GREP FLAGS | $GREP PIE`
