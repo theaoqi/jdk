@@ -23,6 +23,12 @@
 # questions.
 #
 
+#
+# This file has been modified by Loongson Technology in 2025. These
+# modifications are Copyright (c) 2025, Loongson Technology, and are made
+# available on the same license terms set forth above.
+#
+
 AC_DEFUN([BPERF_CHECK_CORES],
 [
   AC_MSG_CHECKING([for number of cores])
@@ -360,16 +366,34 @@ AC_DEFUN_ONCE([BPERF_SETUP_PRECOMPILED_HEADERS],
     AC_MSG_RESULT([no, does not work effectively with icecc])
     PRECOMPILED_HEADERS_AVAILABLE=false
   elif test "x$TOOLCHAIN_TYPE" = xgcc; then
-    # Check that the compiler actually supports precomp headers.
-    echo "int alfa();" > conftest.h
-    $CXX -x c++-header conftest.h -o conftest.hpp.gch 2>&AS_MESSAGE_LOG_FD >&AS_MESSAGE_LOG_FD
-    if test ! -f conftest.hpp.gch; then
-      PRECOMPILED_HEADERS_AVAILABLE=false
-      AC_MSG_RESULT([no, gcc fails to compile properly with -x c++-header])
+    # Check whether the gcc is PIE enabled.
+    if [ "$OPENJDK_TARGET_OS" = "macosx" ]; then
+      PIE_STATUS=`$OTOOL -a -C -d -f -G -h -H -I -j -l -L -m -M -o -P -r -R -S -t -T -v -V -X -dyld_info -dyld_opcodes $CXX | $GREP FLAGS | $GREP PIE`
+    elif [ "$OPENJDK_TARGET_OS" = "windows" ]; then
+      PIE_STATUS=`$DUMPBIN -all $CXX | $GREP FLAGS | $GREP PIE`
+    elif [ "$OPENJDK_TARGET_OS" = "aix" ]; then
+      PIE_STATUS=`dump -h -r -t -n -X64 $CXX | $GREP FLAGS | $GREP PIE`
     else
-      AC_MSG_RESULT([yes])
+      PIE_STATUS=`$READELF -a $CXX | $GREP FLAGS | $GREP PIE`
     fi
-    $RM conftest.h conftest.hpp.gch
+    # Check whether the machine is ASLR enabled.
+    ASLR_STATUS=`cat /proc/sys/kernel/randomize_va_space`
+    # The PIE enabled gcc relies on stable PCH file contents while ASLR may causing unreproducible.
+    if test -n "$PIE_STATUS" && test "$ASLR_STATUS" -gt "0"; then
+      PRECOMPILED_HEADERS_AVAILABLE=false
+      AC_MSG_RESULT([no, ASLR can lead to not binary identical PCH files while gcc is PIE enabled])
+    else
+      # Check that the compiler actually supports precomp headers.
+      echo "int alfa();" > conftest.h
+      $CXX -x c++-header conftest.h -o conftest.hpp.gch 2>&AS_MESSAGE_LOG_FD >&AS_MESSAGE_LOG_FD
+      if test ! -f conftest.hpp.gch; then
+        PRECOMPILED_HEADERS_AVAILABLE=false
+        AC_MSG_RESULT([no, gcc fails to compile properly with -x c++-header])
+      else
+        AC_MSG_RESULT([yes])
+      fi
+      $RM conftest.h conftest.hpp.gch
+    fi
   else
     AC_MSG_RESULT([yes])
   fi
