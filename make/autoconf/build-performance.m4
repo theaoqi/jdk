@@ -366,18 +366,23 @@ AC_DEFUN_ONCE([BPERF_SETUP_PRECOMPILED_HEADERS],
     AC_MSG_RESULT([no, does not work effectively with icecc])
     PRECOMPILED_HEADERS_AVAILABLE=false
   elif test "x$TOOLCHAIN_TYPE" = xgcc; then
-    # Check whether the gcc is PIE enabled.
+    # Check whether the gcc is PIE enabled and whether the machine is ASLR enabled.
     if test "x$OPENJDK_TARGET_OS" = "xmacosx"; then
       PIE_STATUS=`$OTOOL -a -C -d -f -G -h -H -I -j -l -L -m -M -o -P -r -R -S -t -T -v -V -X -dyld_info -dyld_opcodes $CXX | $GREP FLAGS | $GREP PIE`
+      # Considered to be enabled by default on this system.
+      ASLR_STATUS=2
     elif test "x$OPENJDK_TARGET_OS" = "xwindows"; then
       PIE_STATUS=`$DUMPBIN -all $CXX | $GREP FLAGS | $GREP PIE`
+      # Considered to be enabled by default on this system.
+      ASLR_STATUS=2
     elif test "x$OPENJDK_TARGET_OS" = "xaix"; then
       PIE_STATUS=`dump -h -r -t -n -X64 $CXX | $GREP FLAGS | $GREP PIE`
+      # Considered to be enabled by default on this system.
+      ASLR_STATUS=2
     else
       PIE_STATUS=`$READELF -a $CXX | $GREP FLAGS | $GREP PIE`
+      ASLR_STATUS=`cat /proc/sys/kernel/randomize_va_space`
     fi
-    # Check whether the machine is ASLR enabled.
-    ASLR_STATUS=`cat /proc/sys/kernel/randomize_va_space`
     # The PIE enabled gcc relies on stable PCH file contents while ASLR may causing unreproducible.
     if test -n "$PIE_STATUS" && test "$ASLR_STATUS" -gt "0"; then
       PRECOMPILED_HEADERS_AVAILABLE=false
