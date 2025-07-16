@@ -43,7 +43,7 @@
  *                   -XX:+WhiteBoxAPI
  *                   compiler.vectorization.runner.BasicDoubleOpTest
  *
- * @requires (os.simpleArch == "x64") | (os.simpleArch == "aarch64") | (os.simpleArch == "loongarch64")
+ * @requires (os.simpleArch == "x64") | (os.simpleArch == "aarch64") | (os.simpleArch == "riscv64") | (os.simpleArch == "loongarch64")
  * @requires vm.compiler2.enabled
  */
 
